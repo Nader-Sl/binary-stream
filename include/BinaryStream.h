@@ -170,7 +170,7 @@ public:
         *this >> strLen;
         byte buf[strLen];
         this->read(&buf[0], strLen);
-        val = std::string((char *) buf, strLen);
+        val.assign((char *) buf, strLen);
         return *this;
     }
 
