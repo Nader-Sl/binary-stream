@@ -12,14 +12,14 @@ unsigned int BinaryStream::read(byte *data, unsigned int size) {
         return 0;
     }
 
-    unsigned int remaining = this->size - offset;
+    unsigned int remaining = getRemainingSize();
     if(size > remaining) {
         std::stringstream err;
         err << "Not enough bytes in buffer to read: need " << size << ", have " << remaining;
         throw std::out_of_range(err.str());
     }
 
-    memcpy(data, &this->buffer[offset], sizeof(byte) * size);
+    memcpy(data, &buffer[offset], sizeof(byte) * size);
     offset += size;
 
     return size;
@@ -28,16 +28,16 @@ unsigned int BinaryStream::read(byte *data, unsigned int size) {
 void BinaryStream::write(const byte *data, unsigned int size) {
     unsigned int remaining = offset + size;
     if(size > remaining) {
-        if(resizable) {
-            resize(offset + size);
-        } else {
+        if(!resizable) {
             std::stringstream err;
             err << "Not enough bytes in buffer to write: need " << size << ", have " << remaining;
             throw std::out_of_range(err.str());
         }
+
+        resize(offset + size);
     }
 
-    memcpy(&this->buffer[offset], data, size);
+    memcpy(&buffer[offset], data, size);
     offset += size;
 }
 
