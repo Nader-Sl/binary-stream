@@ -57,8 +57,8 @@ void BinaryStream::resize(unsigned int minimalSize) {
 
     byte *newBuf = new byte[newSize];
     memcpy(&newBuf[0], &buffer[0], size);
-    delete buffer;
-    buffer = newBuf;
+
+    buffer.reset(newBuf);
     size = newSize;
 }
 
@@ -71,18 +71,18 @@ unsigned int BinaryStream::skip(unsigned int count) {
 }
 
 byte* BinaryStream::getBuffer(bool release) {
-    byte *b = buffer;
+    byte *b = buffer.get();
     if(release) {
-        buffer = nullptr;
+        buffer.reset();
     }
 
     return b;
 }
 
-void BinaryStream::swapBytes(byte *array, size_t size) {
-    byte* array2 = new byte[size];
-    memcpy(array2, array, size);
+void BinaryStream::swapBytes(byte *bytes, size_t size) {
+    byte temp_bytes[size];
+    memcpy(temp_bytes, bytes, size);
     for (ssize_t i = size - 1; i >= 0; i--) {
-        array[size - 1 - i] = array2[i];
+        bytes[size - 1 - i] = temp_bytes[i];
     }
 }

@@ -8,7 +8,6 @@
 #include "../../includes.h"
 
 #include <cstring>
-#include <exception>
 #include <string>
 
 /**
@@ -19,23 +18,22 @@ class BinaryStream {
 protected:
 
     unsigned int size;
-    byte *buffer;
+    std::unique_ptr<byte[]> buffer;
     unsigned int offset = 0;
     bool resizable = false;
 
     void resize(unsigned int minimalSize);
 
-    static void swapBytes(byte *array, size_t size);
+    static void swapBytes(byte *bytes, size_t size);
 
 public:
 
     bool swapEndian = false;
 
-    BinaryStream(byte *buffer, unsigned int size) : buffer(buffer), size(size) {}
-    BinaryStream(byte *buffer, unsigned int size, bool resizable) : buffer(buffer), size(size), resizable(resizable) {}
+    BinaryStream(std::unique_ptr<byte[]> buffer, unsigned int size) : buffer(std::move(buffer)), size(size) {}
+    BinaryStream(std::unique_ptr<byte[]> buffer, unsigned int size, bool resizable) : buffer(std::move(buffer)), size(size), resizable(resizable) {}
 
     unsigned int read(byte *data, unsigned int size);
-
     void write(const byte *data, unsigned int size);
 
     /**
@@ -67,11 +65,6 @@ public:
         return size - offset;
     }
 
-    /**
-     *
-     * @param count
-     * @return
-     */
     unsigned int skip(unsigned int count);
 
     /**
