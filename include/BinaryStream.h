@@ -20,7 +20,7 @@ protected:
     unsigned int size = 0;
     std::unique_ptr<byte[]> buffer;
     unsigned int offset = 0;
-    bool resizable = false;
+    bool resizable;
 
     void resize(unsigned int minimalSize);
 
@@ -30,10 +30,9 @@ public:
 
     bool swapEndian = false;
 
-    BinaryStream() = default;
-    BinaryStream(bool resizable) : resizable(resizable) {}
-    BinaryStream(std::unique_ptr<byte[]> buffer, unsigned int size) : buffer(std::move(buffer)), size(size) {}
-    BinaryStream(std::unique_ptr<byte[]> buffer, unsigned int size, bool resizable) : buffer(std::move(buffer)), size(size), resizable(resizable) {}
+    explicit BinaryStream(bool resizable = false) : resizable(resizable) {}
+    BinaryStream(byte *data, unsigned int size, bool resizable = false);
+    BinaryStream(std::unique_ptr<byte[]> buffer, unsigned int size, bool resizable = false) : buffer(std::move(buffer)), size(size), resizable(resizable) {}
 
     unsigned int read(byte *data, unsigned int size);
     void write(const byte *data, unsigned int size);

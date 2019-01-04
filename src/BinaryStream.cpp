@@ -7,6 +7,15 @@
 #include <memory>
 #include <sstream>
 
+BinaryStream::BinaryStream(byte *data, unsigned int size, bool resizable) {
+    byte *newBuf = new byte[size];
+    memcpy(&newBuf[0], &data[0], size);
+
+    buffer.reset(newBuf);
+    this->size = size;
+    this->resizable = resizable;
+}
+
 unsigned int BinaryStream::read(byte *data, unsigned int size) {
     if(size == 0) {
         return 0;
