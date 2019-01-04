@@ -17,7 +17,7 @@ class BinaryStream {
 
 protected:
 
-    unsigned int size;
+    unsigned int size = 0;
     std::unique_ptr<byte[]> buffer;
     unsigned int offset = 0;
     bool resizable = false;
@@ -30,6 +30,8 @@ public:
 
     bool swapEndian = false;
 
+    BinaryStream() = default;
+    BinaryStream(bool resizable) : resizable(resizable) {}
     BinaryStream(std::unique_ptr<byte[]> buffer, unsigned int size) : buffer(std::move(buffer)), size(size) {}
     BinaryStream(std::unique_ptr<byte[]> buffer, unsigned int size, bool resizable) : buffer(std::move(buffer)), size(size), resizable(resizable) {}
 
@@ -72,6 +74,8 @@ public:
      * or write on it will result in a crash!).
      */
     byte *getBuffer(bool release);
+
+    void setBuffer(byte *data, unsigned int size);
 
     static const int LONG_SIZE = 8;
     static const int INT_SIZE = 4;

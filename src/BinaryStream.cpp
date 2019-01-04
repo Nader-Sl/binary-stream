@@ -79,6 +79,14 @@ byte* BinaryStream::getBuffer(bool release) {
     return b;
 }
 
+void BinaryStream::setBuffer(byte *data, unsigned int size) {
+    byte *newBuf = new byte[size];
+    memcpy(&newBuf[0], &data[0], size);
+
+    buffer.reset(newBuf);
+    this->size = size;
+}
+
 void BinaryStream::swapBytes(byte *bytes, size_t size) {
     byte temp_bytes[size];
     memcpy(temp_bytes, bytes, size);
