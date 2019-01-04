@@ -7,36 +7,78 @@
 
 #include "../../includes.h"
 
+#include <cstring>
 #include <exception>
 #include <string>
-#include <cstring>
-#include <memory>
-
-class EOFException : public std::exception {
-public:
-    virtual const char *what() const throw() {
-        return "End of stream reached!";
-    }
-};
 
 /**
  * This class allows reading and writing binary data.
  */
 class BinaryStream {
+
+protected:
+
+    unsigned int size;
+    byte *data;
+    unsigned int offset = 0;
+    bool resizable = false;
+
+    void resize(unsigned int minimalSize);
+
+    static void swapBytes(byte *array, size_t size);
+
 public:
+
     bool swapEndian = false;
 
-    virtual ~BinaryStream() {};
+    BinaryStream(byte *data, unsigned int size) : data(data), size(size) {}
+    BinaryStream(byte *data, unsigned int size, bool resizable) : data(data), size(size), resizable(resizable) {}
 
-    virtual unsigned int read(byte *data, unsigned int size) = 0;
+    unsigned int read(byte *data, unsigned int size);
 
-    virtual void write(const byte *data, unsigned int size) = 0;
+    void write(const byte *data, unsigned int size);
 
-    inline void readFully(byte *data, unsigned int size) {
-        if(read(data, size) != size) {
-            throw EOFException();
-        }
+    /**
+     * This function is used to check if the buffer is resizable.
+     */
+    inline bool isResizable() const {
+        return resizable;
     }
+
+    /**
+     * This function returns the current used buffer size when writing or the current buffer position when reading.
+     */
+    inline unsigned int getOffset() const {
+        return offset;
+    }
+
+    /**
+     * This function returns the actual size of the buffer.
+     */
+    inline unsigned int getBufferSize() const {
+        return size;
+    }
+
+    /**
+     * This function returns the remaining buffer size (in bytes). When using a resizable buffer, it'll return how many bytes
+     * can be still written before a buffer reallocation.
+     */
+    inline unsigned int getRemainingSize() const {
+        return size - offset;
+    }
+
+    /**
+     *
+     * @param count
+     * @return
+     */
+    unsigned int skip(unsigned int count);
+
+    /**
+     * Pass 'true' if you want to avoid freeing the buffer but are not going to use this object later (trying to read
+     * or write on it will result in a crash!).
+     */
+    byte* getBuffer(bool release);
 
     static const int LONG_SIZE = 8;
     static const int INT_SIZE = 4;
@@ -47,7 +89,7 @@ public:
 
     static inline unsigned int getStringSize(const std::string &str) {
         return (unsigned int) (INT_SIZE + str.length());
-    };
+    }
 
     BinaryStream &operator<<(float val) {
         if(swapEndian) swapBytes((byte*) &val, FLOAT_SIZE);
@@ -174,177 +216,6 @@ public:
         return *this;
     }
 
-    static void swapBytes(byte *array, size_t size) {
-        byte* array2 = new byte[size];
-        memcpy(array2, array, size);
-        for (ssize_t i = size - 1; i >= 0; i--) {
-            array[size - 1 - i] = array2[i];
-        }
-    }
 };
 
-class MemoryBinaryStream : public BinaryStream {
-protected:
-    unsigned int size;
-    byte *data;
-    unsigned int pos = 0;
-    bool allowRealloc = false;
-
-    virtual void resize(unsigned int minimalSize) { }
-public:
-    MemoryBinaryStream(byte *data, unsigned int size);
-
-    /**
-     * This function returns the current used buffer size when writing or the current buffer position when reading.
-     */
-    inline unsigned int getSize() const { return pos; }
-
-    /**
-     * This function returns the current used buffer size when writing or the current buffer position when reading.
-     */
-    inline unsigned int getPos() const { return pos; }
-
-    /**
-     * This function returns the actual size of the buffer.
-     */
-    inline unsigned int getBufferSize() const { return size; }
-
-    /**
-     * This function returns the remaining buffer size (in bytes).
-     * When using a DynamicMemoryBuffer it'll return how many bytes can be still written before a buffer reallocation.
-     */
-    inline unsigned int getRemainingSize() const { return size - pos; }
-
-    unsigned int skip(unsigned int count) {
-        if(pos + count > size) {
-            count = (size - pos);
-        }
-        pos += count;
-        return count;
-    }
-
-    virtual void write(const byte *data, unsigned int size);
-
-    virtual unsigned int read(byte *data, unsigned int size);
-
-};
-
-class DynamicMemoryBinaryStream : public MemoryBinaryStream {
-
-protected:
-    virtual void resize(unsigned int minimalSize);
-
-public:
-    DynamicMemoryBinaryStream(unsigned int size);
-    DynamicMemoryBinaryStream() : DynamicMemoryBinaryStream(1024) {
-        //
-    }
-
-    virtual ~DynamicMemoryBinaryStream() {
-        if(data != nullptr) {
-            delete data;
-        }
-    }
-
-    /**
-     * Pass 'true' if you want to avoid freeing the buffer but are not going to use this object later (trying to read
-     * or write on it will result in a crash!).
-     */
-    byte* getBuffer(bool release);
-
-};
-
-class FileBinaryStream : public BinaryStream {
-
-    int fd = -1;
-    bool closeFdOnDestroy = false;
-public:
-    FileBinaryStream() {}
-    FileBinaryStream(int fd);
-
-    FileBinaryStream(int fd, bool closeFdOnDestroy) : FileBinaryStream(fd) {
-        this->closeFdOnDestroy = closeFdOnDestroy;
-    }
-
-    virtual ~FileBinaryStream();
-
-    void setFileDescriptor(int fd) { this->fd = fd; }
-    inline int getFileDescriptor() { return fd; }
-
-    virtual void write(const byte *data, unsigned int size);
-
-    virtual unsigned int read(byte *data, unsigned int size);
-
-};
-
-class WrapperBinaryStream : public BinaryStream {
-protected:
-    std::unique_ptr<BinaryStream> stream;
-public:
-    WrapperBinaryStream(std::unique_ptr<BinaryStream> stream) : stream(std::move(stream)) {
-        //
-    }
-
-    virtual void write(const byte *data, unsigned int size) {
-        stream->write(data, size);
-    }
-
-    virtual unsigned int read(byte *data, unsigned int size) {
-        return stream->read(data, size);
-    }
-
-};
-
-/*
-class BufferedBinaryStream : public WrapperBinaryStream {
-
-protected:
-    static const unsigned int CHUNK_SIZE = 1024 * 16;
-    byte readData [CHUNK_SIZE];
-    unsigned int readPos = 0;
-    byte writeData [CHUNK_SIZE];
-    unsigned int writePos = 0;
-
-public:
-    BufferedBinaryStream(std::unique_ptr<BinaryStream> stream) : WrapperBinaryStream(std::move(stream)) {
-        //
-    };
-
-    virtual void write(const byte *data, unsigned int size) {
-        if (size >= CHUNK_SIZE) {
-            stream->write(data, size);
-            return;
-        }
-        else if (size >= CHUNK_SIZE - writePos)
-            flush();
-        memcpy(&writeData[writePos], &data[0], size);
-    };
-
-    virtual unsigned int read(byte *data, unsigned int size) {
-        int destOff = 0;
-        if (readPos <= 0) {
-            stream->read(&readData[0], size);
-        }
-
-        if (size < CHUNK_SIZE - readPos) {
-            memcpy(&data[0], &readData[0], size);
-            readPos += size;
-            return;
-        }
-        memcpy(&data[0], &readData[0], CHUNK_SIZE - readPos);
-        destOff += CHUNK_SIZE - readPos;
-        readPos = 0;
-
-        stream->read(&data[destOff], size - destOff);
-    };
-
-    virtual void flush() {
-        if (writePos <= 0)
-            return;
-        stream->write(&writeData[0], writePos);
-        writePos = 0;
-    };
-
-};
- */
 #endif //CESTIA_BINARYSTREAM_H

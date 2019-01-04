@@ -3,50 +3,58 @@
 //
 
 #include "BinaryStream.h"
-#include "../Server.h"
 
-#include <unistd.h>
+#include <memory>
+#include <sstream>
 
-MemoryBinaryStream::MemoryBinaryStream(byte *data, unsigned int size) {
-    this->data = data;
-    this->size = size;
-}
-
-void MemoryBinaryStream::write(const byte *data, unsigned int size) {
-    if(pos + size > this->size) {
-        if(allowRealloc) {
-            resize(pos + size);
-        } else {
-            Server::Log->error("Attempting to write %i bytes to a buffer with only %i bytes remaining!", size, this->size - pos);
-            throw EOFException();
-        }
+unsigned int BinaryStream::read(byte *data, unsigned int size) {
+    if(size == 0) {
+        return 0;
     }
 
-    memcpy(&this->data[pos], data, size);
-    pos += size;
-}
-
-unsigned int MemoryBinaryStream::read(byte *data, unsigned int size) {
-    if(pos + size > this->size) {
-        size = (this->size - pos);
+    unsigned int remaining = this->size - offset;
+    if(size > remaining) {
+        std::stringstream err;
+        err << "Not enough bytes in buffer to read: need " << size << ", have " << remaining;
+        throw std::out_of_range(err.str());
     }
 
-    memcpy(data, &this->data[pos], size);
-    pos += size;
+    memcpy(data, &this->data[offset], sizeof(byte) * size);
+    offset += size;
+
     return size;
 }
 
-DynamicMemoryBinaryStream::DynamicMemoryBinaryStream(unsigned int size) : MemoryBinaryStream(new byte[size], size) {
-    allowRealloc = true;
+void BinaryStream::write(const byte *data, unsigned int size) {
+    unsigned int remaining = offset + size;
+    if(size > remaining) {
+        if(resizable) {
+            resize(offset + size);
+        } else {
+            std::stringstream err;
+            err << "Not enough bytes in buffer to write: need " << size << ", have " << remaining;
+            throw std::out_of_range(err.str());
+        }
+    }
+
+    memcpy(&this->data[offset], data, size);
+    offset += size;
 }
 
-void DynamicMemoryBinaryStream::resize(unsigned int minimalSize) {
+void BinaryStream::resize(unsigned int minimalSize) {
+    if(!resizable) {
+        throw std::bad_function_call();
+    }
+
     unsigned int newSize = size;
     while(newSize < minimalSize) {
         newSize *= 2;
     }
-    if(newSize == size)
+
+    if(newSize == size) {
         return;
+    }
+
     byte *newBuf = new byte[newSize];
     memcpy(&newBuf[0], &data[0], size);
     delete data;
@@ -54,47 +62,27 @@ void DynamicMemoryBinaryStream::resize(unsigned int minimalSize) {
     size = newSize;
 }
 
-byte *DynamicMemoryBinaryStream::getBuffer(bool release) {
+unsigned int BinaryStream::skip(unsigned int count) {
+    if(offset + count > size) {
+        count = (size - offset);
+    }
+    offset += count;
+    return count;
+}
+
+byte* BinaryStream::getBuffer(bool release) {
     byte *b = data;
-    if(release)
+    if(release) {
         data = nullptr;
+    }
+
     return b;
 }
 
-FileBinaryStream::FileBinaryStream(int fd) {
-    this->fd = fd;
-}
-
-void FileBinaryStream::write(const byte *data, unsigned int size) {
-    int pos = 0;
-    while(true) {
-        ssize_t s = ::write(fd, &data[pos], size - pos);
-        if(s < 0) {
-            throw EOFException();
-        }
-        pos += s;
-        if(pos >= size) {
-            return;
-        }
-    }
-}
-
-unsigned int FileBinaryStream::read(byte *data, unsigned int size) {
-    unsigned int pos = 0;
-    while(true) {
-        ssize_t s = ::read(fd, &data[pos], size - pos);
-        if(s <= 0) {
-            return pos;
-        }
-        pos += s;
-        if(pos >= size) {
-            return pos;
-        }
-    }
-}
-
-FileBinaryStream::~FileBinaryStream() {
-    if(closeFdOnDestroy) {
-        ::close(fd);
+void BinaryStream::swapBytes(byte *array, size_t size) {
+    byte* array2 = new byte[size];
+    memcpy(array2, array, size);
+    for (ssize_t i = size - 1; i >= 0; i--) {
+        array[size - 1 - i] = array2[i];
     }
 }
