@@ -19,7 +19,7 @@ unsigned int BinaryStream::read(byte *data, unsigned int size) {
         throw std::out_of_range(err.str());
     }
 
-    memcpy(data, &this->data[offset], sizeof(byte) * size);
+    memcpy(data, &this->buffer[offset], sizeof(byte) * size);
     offset += size;
 
     return size;
@@ -37,7 +37,7 @@ void BinaryStream::write(const byte *data, unsigned int size) {
         }
     }
 
-    memcpy(&this->data[offset], data, size);
+    memcpy(&this->buffer[offset], data, size);
     offset += size;
 }
 
@@ -56,9 +56,9 @@ void BinaryStream::resize(unsigned int minimalSize) {
     }
 
     byte *newBuf = new byte[newSize];
-    memcpy(&newBuf[0], &data[0], size);
-    delete data;
-    data = newBuf;
+    memcpy(&newBuf[0], &buffer[0], size);
+    delete buffer;
+    buffer = newBuf;
     size = newSize;
 }
 
@@ -71,9 +71,9 @@ unsigned int BinaryStream::skip(unsigned int count) {
 }
 
 byte* BinaryStream::getBuffer(bool release) {
-    byte *b = data;
+    byte *b = buffer;
     if(release) {
-        data = nullptr;
+        buffer = nullptr;
     }
 
     return b;

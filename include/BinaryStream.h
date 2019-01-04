@@ -19,7 +19,7 @@ class BinaryStream {
 protected:
 
     unsigned int size;
-    byte *data;
+    byte *buffer;
     unsigned int offset = 0;
     bool resizable = false;
 
@@ -31,8 +31,8 @@ public:
 
     bool swapEndian = false;
 
-    BinaryStream(byte *data, unsigned int size) : data(data), size(size) {}
-    BinaryStream(byte *data, unsigned int size, bool resizable) : data(data), size(size), resizable(resizable) {}
+    BinaryStream(byte *buffer, unsigned int size) : buffer(buffer), size(size) {}
+    BinaryStream(byte *buffer, unsigned int size, bool resizable) : buffer(buffer), size(size), resizable(resizable) {}
 
     unsigned int read(byte *data, unsigned int size);
 
@@ -78,7 +78,7 @@ public:
      * Pass 'true' if you want to avoid freeing the buffer but are not going to use this object later (trying to read
      * or write on it will result in a crash!).
      */
-    byte* getBuffer(bool release);
+    byte *getBuffer(bool release);
 
     static const int LONG_SIZE = 8;
     static const int INT_SIZE = 4;
