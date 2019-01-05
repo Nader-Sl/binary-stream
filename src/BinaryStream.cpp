@@ -83,13 +83,15 @@ unsigned int BinaryStream::skip(unsigned int count) {
     return count;
 }
 
-byte* BinaryStream::getBuffer(bool release) {
-    byte *b = buffer.get();
+std::unique_ptr<byte[]> BinaryStream::getBuffer(bool release) {
+    auto b = std::make_unique<byte[]>(size);
+    memcpy(&b[0], &buffer[0], size);
+
     if(release) {
         buffer.reset();
     }
 
-    return b;
+    return std::move(b);
 }
 
 void BinaryStream::setBuffer(byte *data, unsigned int size) {

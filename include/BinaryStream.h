@@ -73,7 +73,7 @@ public:
      * Pass 'true' if you want to avoid freeing the buffer but are not going to use this object later (trying to read
      * or write on it will result in a crash!).
      */
-    byte *getBuffer(bool release);
+    std::unique_ptr<byte[]> getBuffer(bool release);
 
     void setBuffer(byte *data, unsigned int size);
 
