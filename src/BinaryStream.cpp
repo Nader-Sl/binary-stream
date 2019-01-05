@@ -39,7 +39,7 @@ unsigned int BinaryStream::read(byte *data, unsigned int size) {
 }
 
 void BinaryStream::write(const byte *data, unsigned int size) {
-    unsigned int remaining = offset + size;
+    unsigned int remaining = getRemainingSize();
     if(size > remaining) {
         if(!resizable) {
             std::stringstream err;
