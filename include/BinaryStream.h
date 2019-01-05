@@ -31,6 +31,7 @@ public:
     bool swapEndian = false;
 
     explicit BinaryStream(bool resizable = false) : resizable(resizable) {}
+    explicit BinaryStream(unsigned int size, bool resizable = false);
     BinaryStream(byte *data, unsigned int size, bool resizable = false);
     BinaryStream(std::unique_ptr<byte[]> buffer, unsigned int size, bool resizable = false) : buffer(std::move(buffer)), size(size), resizable(resizable) {}
 

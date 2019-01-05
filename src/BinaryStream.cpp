@@ -7,6 +7,10 @@
 #include <memory>
 #include <sstream>
 
+BinaryStream::BinaryStream(unsigned int size, bool resizable) : size(size), resizable(resizable) {
+    buffer = std::make_unique<byte[]>(size);
+}
+
 BinaryStream::BinaryStream(byte *data, unsigned int size, bool resizable) {
     byte *newBuf = new byte[size];
     memcpy(&newBuf[0], &data[0], size);
