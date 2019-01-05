@@ -12,10 +12,10 @@ BinaryStream::BinaryStream(unsigned int size, bool resizable) : size(size), resi
 }
 
 BinaryStream::BinaryStream(byte *data, unsigned int size, bool resizable) {
-    byte *newBuf = new byte[size];
+    auto newBuf = std::make_unique<byte[]>(size);
     memcpy(&newBuf[0], &data[0], size);
 
-    buffer.reset(newBuf);
+    buffer = std::move(newBuf);
     this->size = size;
     this->resizable = resizable;
 }
