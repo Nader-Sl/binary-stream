@@ -2,8 +2,8 @@
 // Created by Jack Noordhuis on 23/12/18.
 //
 
-#ifndef CESTIA_BINARYSTREAM_H
-#define CESTIA_BINARYSTREAM_H
+#ifndef BINARY_STREAM_BINARYSTREAM_H
+#define BINARY_STREAM_BINARYSTREAM_H
 
 #ifndef TYPE_BYTE
 typedef unsigned char byte;
@@ -244,4 +244,4 @@ public:
 
 };
 
-#endif //CESTIA_BINARYSTREAM_H
+#endif //BINARY_STREAM_BINARYSTREAM_H
