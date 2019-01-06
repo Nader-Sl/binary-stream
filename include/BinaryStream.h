@@ -5,9 +5,10 @@
 #ifndef CESTIA_BINARYSTREAM_H
 #define CESTIA_BINARYSTREAM_H
 
-#include "../../includes.h"
+#ifndef TYPE_BYTE
+typedef unsigned char byte;
+#endif
 
-#include <cstring>
 #include <string>
 
 /**

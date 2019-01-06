@@ -2,9 +2,8 @@
 // Created by Jack Noordhuis on 23/12/18.
 //
 
-#include "BinaryStream.h"
+#include "../include/BinaryStream.h"
 
-#include <memory>
 #include <sstream>
 
 BinaryStream::BinaryStream(unsigned int size, bool resizable) : size(size), resizable(resizable) {
