@@ -64,10 +64,10 @@ void BinaryStream::resize(unsigned int minimalSize) {
         return;
     }
 
-    byte *newBuf = new byte[newSize];
+    auto newBuf = std::make_unique<byte[]>(newSize);
     memcpy(&newBuf[0], &buffer[0], size);
 
-    buffer.reset(newBuf);
+    buffer = std::move(newBuf);
     size = newSize;
 }
 
