@@ -105,8 +105,6 @@ public:
      */
     std::unique_ptr<byte[]> getBuffer(bool release);
 
-    void setBuffer(byte *data, unsigned int size);
-
     static const int LONG_SIZE = 8;
     static const int INT_SIZE = 4;
     static const int SHORT_SIZE = 2;
