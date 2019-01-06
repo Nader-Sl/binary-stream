@@ -77,6 +77,13 @@ public:
     unsigned int skip(unsigned int count);
 
     /**
+     * Check if the offset has reached the end of the buffer.
+     */
+    bool feof() {
+        return offset > size;
+    }
+
+    /**
      * Pass 'true' if you want to avoid freeing the buffer but are not going to use this object later (trying to read
      * or write on it will result in a crash!).
      */
