@@ -35,33 +35,44 @@ public:
     BinaryStream(byte *data, unsigned int size, bool resizable = false);
     BinaryStream(std::unique_ptr<byte[]> buffer, unsigned int size, bool resizable = false) : buffer(std::move(buffer)), size(size), resizable(resizable) {}
 
+    /**
+     * Read bytes from the buffer.
+     *
+     * Copies size bytes from the buffer, starting from the offset, and returns the number of bytes read.
+     */
     unsigned int read(byte *data, unsigned int size);
+
+    /**
+     * Write bytes to the buffer.
+     *
+     * Copies data into the buffer at the current offset position.
+     */
     void write(const byte *data, unsigned int size);
 
     /**
-     * This function is used to check if the buffer is resizable.
+     * Check if the buffer is resizable.
      */
     inline bool isResizable() const {
         return resizable;
     }
 
     /**
-     * This function returns the current used buffer size when writing or the current buffer position when reading.
+     * Get the current buffer position offset.
      */
     inline unsigned int getOffset() const {
         return offset;
     }
 
     /**
-     * This function returns the actual size of the buffer.
+     * Get the actual size of the buffer.
      */
     inline unsigned int getBufferSize() const {
         return size;
     }
 
     /**
-     * This function returns the remaining buffer size (in bytes). When using a resizable buffer, it'll return how many bytes
-     * can be still written before a buffer reallocation.
+     * Get the remaining buffer size (in bytes). When using a resizable buffer, it'll return how many bytes
+     * can be still written before a buffer resize/reallocation.
      */
     inline unsigned int getRemainingSize() const {
         return size - offset;
@@ -74,6 +85,9 @@ public:
         offset = 0;
     }
 
+    /**
+     * Move the buffer offset forward by the specified number of bytes.
+     */
     unsigned int skip(unsigned int count);
 
     /**
@@ -84,8 +98,10 @@ public:
     }
 
     /**
-     * Pass 'true' if you want to avoid freeing the buffer but are not going to use this object later (trying to read
-     * or write on it will result in a crash!).
+     * Get the actual buffer.
+     *
+     * If you are not going to use this object later, pass 'true' to free the buffer (trying to read
+     * or write will cause a crash).
      */
     std::unique_ptr<byte[]> getBuffer(bool release);
 
