@@ -67,6 +67,13 @@ public:
         return size - offset;
     }
 
+    /**
+     * Rewind the offset to the beginning of the buffer.
+     */
+    void rewind() {
+        offset = 0;
+    }
+
     unsigned int skip(unsigned int count);
 
     /**
