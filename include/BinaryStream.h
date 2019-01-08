@@ -7,6 +7,7 @@
 
 #ifndef TYPE_BYTE
 typedef unsigned char byte;
+#define TYPE_BYTE byte
 #endif
 
 #include <string>
